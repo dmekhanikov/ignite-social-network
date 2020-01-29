@@ -1,6 +1,7 @@
 package dm.social;
 
 import dm.social.model.Post;
+import dm.social.model.Subscription;
 import org.apache.ignite.cache.QueryEntity;
 import org.apache.ignite.configuration.CacheConfiguration;
 
@@ -9,6 +10,7 @@ import java.util.UUID;
 
 public class ConfigurationManager {
     public static final String POSTS_CACHE = "posts";
+    public static final String SUBSCRIPTIONS_CACHE = "subscriptions";
 
     public static final String SQL_SCHEMA = "PUBLIC";
 
@@ -25,6 +27,17 @@ public class ConfigurationManager {
         QueryEntity qe = new QueryEntity(UUID.class, Post.class);
         qe.setKeyFieldName("postId");
         qe.setTableName("posts");
+        cacheCfg.setQueryEntities(Collections.singleton(qe));
+        cacheCfg.setSqlSchema(SQL_SCHEMA);
+
+        return cacheCfg;
+    }
+
+    public CacheConfiguration<Subscription, Boolean> subscriptionsCacheConfiguration() {
+        CacheConfiguration<Subscription, Boolean> cacheCfg = new CacheConfiguration<>(SUBSCRIPTIONS_CACHE);
+        cacheCfg.setBackups(1);
+
+        QueryEntity qe = new QueryEntity(Subscription.class, Boolean.class);
         cacheCfg.setQueryEntities(Collections.singleton(qe));
         cacheCfg.setSqlSchema(SQL_SCHEMA);
 

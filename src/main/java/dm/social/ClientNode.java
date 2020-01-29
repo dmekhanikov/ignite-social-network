@@ -16,10 +16,12 @@ public class ClientNode {
 
     private final String userId;
     private final ContentService contentService;
+    private final SubscriptionService subscriptionService;
 
     public ClientNode(Ignite ignite, String userId) {
         this.userId = userId;
         this.contentService = new ContentService(ignite);
+        this.subscriptionService = new SubscriptionService(ignite);
     }
 
     public static void main(String[] args) {
@@ -64,6 +66,13 @@ public class ClientNode {
                                 System.err.println("Post text is missing.");
                             }
                             break;
+                        case "subscribe":
+                            if (tokens.length > 1) {
+                                clientNode.subscribe(tokens[1]);
+                            } else {
+                                System.err.println("User ID is missing.");
+                            }
+                            break;
                         default:
                             System.err.println("Unrecognized command: " + cmd);
                     }
@@ -84,5 +93,10 @@ public class ClientNode {
         for (Post post : posts) {
             System.out.println(post);
         }
+    }
+
+    private void subscribe(String account) {
+        subscriptionService.createSubscription(userId, account);
+        System.out.println("OK");
     }
 }

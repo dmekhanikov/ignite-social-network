@@ -3,9 +3,8 @@ package dm.social;
 import com.opencsv.CSVReader;
 import com.opencsv.exceptions.CsvException;
 import dm.social.model.Post;
-import dm.social.model.User;
 import org.apache.ignite.Ignite;
-import org.apache.ignite.IgniteCache;
+import org.apache.ignite.IgniteDataStreamer;
 import org.apache.ignite.Ignition;
 
 import java.io.BufferedReader;
@@ -36,46 +35,35 @@ public class DataLoader {
     public void load(File sourceFile) throws IOException, CsvException {
         ConfigurationManager cfgManager = ConfigurationManager.instance();
 
-        IgniteCache<UUID, User> usersCache = ignite.getOrCreateCache(cfgManager.usersCacheConfiguration());
-        IgniteCache<String, UUID> userNamesCache = ignite.getOrCreateCache(cfgManager.userNamesCacheConfiguration());
-        IgniteCache<UUID, Post> postsCache = ignite.getOrCreateCache(cfgManager.postsCacheConfiguration());
+        ignite.getOrCreateCache(cfgManager.postsCacheConfiguration());
 
         BufferedReader br = new BufferedReader(new FileReader(sourceFile));
-        try (CSVReader csvReader = new CSVReader(br)) {
+        try (CSVReader csvReader = new CSVReader(br);
+             IgniteDataStreamer<UUID, Post> streamer = ignite.dataStreamer(ConfigurationManager.POSTS_CACHE)) {
+            streamer.allowOverwrite(true);
+
+            ignite.log().info("Started loading data.");
+
             int rowsProcessed = 0;
             for (String[] row = csvReader.readNext(); row != null; row = csvReader.readNext()) {
                 try {
                     long createdTimestamp = dateToTimestamp(row[DATE_COL]);
+                    String userId = row[USER_COL];
                     UUID postId = UUID.randomUUID();
-                    UUID userId = putOrGetUserId(row[USER_COL], userNamesCache, usersCache);
                     String text = row[TEXT_COL];
                     Post post = new Post(postId, userId, text, createdTimestamp);
 
-                    postsCache.put(postId, post);
-
+                    streamer.addData(postId, post);
                 } catch (ParseException e) {
                     ignite.log().error("Failed to parse date of a tweet. Skipping. Tweet ID: " + row[ID_COL]);
                 }
+
                 rowsProcessed++;
                 if (rowsProcessed != 0 && rowsProcessed % 100_000 == 0) {
                     ignite.log().info(rowsProcessed + " rows processed.");
                 }
             }
         }
-    }
-
-    private UUID putOrGetUserId(String userName,
-                                IgniteCache<String, UUID> userNamesCache,
-                                IgniteCache<UUID, User> usersCache) {
-        UUID userId = userNamesCache.get(userName);
-        if (userId == null) {
-            userId = UUID.randomUUID();
-            userNamesCache.put(userName, userId);
-            User user = new User(userId, userName);
-            usersCache.put(userId, user);
-        }
-
-        return userId;
     }
 
     private long dateToTimestamp(String dateString) throws ParseException {

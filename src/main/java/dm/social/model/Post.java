@@ -11,7 +11,7 @@ public class Post {
 
     @AffinityKeyMapped
     @QuerySqlField
-    private UUID userId;
+    private String userId;
 
     @QuerySqlField
     private String text;
@@ -19,7 +19,7 @@ public class Post {
     @QuerySqlField(index = true)
     private long createdUTCTimestamp;
 
-    public Post(UUID postId, UUID userId, String text, long createdUTCTimestamp) {
+    public Post(UUID postId, String userId, String text, long createdUTCTimestamp) {
         this.postId = postId;
         this.userId = userId;
         this.text = text;
@@ -30,7 +30,7 @@ public class Post {
         return postId;
     }
 
-    public UUID userId() {
+    public String userId() {
         return userId;
     }
 

@@ -20,15 +20,13 @@ public class SubscriptionService {
         ignite.getOrCreateCache(ConfigurationManager.instance().postsCacheConfiguration());
     }
 
-    public Subscription createSubscription(String subscriber, String account) {
+    public void createSubscription(String subscriber, String account) {
         Subscription subscription = new Subscription(subscriber, account);
 
         IgniteCache<Subscription, Boolean> subscriptionsCache =
                 ignite.getOrCreateCache(ConfigurationManager.instance().subscriptionsCacheConfiguration());
 
         subscriptionsCache.put(subscription, true);
-
-        return subscription;
     }
 
     public void removeSubscription(String subscriber, String account) {

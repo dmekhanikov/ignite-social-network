@@ -27,12 +27,10 @@ public class ContentService {
         ignite.getOrCreateCache(ConfigurationManager.instance().postsCacheConfiguration());
     }
 
-    public Post createPost(String userId, String text) {
+    public void createPost(String userId, String text) {
         Post post = new Post(UUID.randomUUID(), userId, text, new Date().getTime());
         IgniteCache<UUID, Post> postsCache = postsCache(ignite);
         postsCache.put(post.postId(), post);
-
-        return post;
     }
 
     public List<Post> fetchPosts(String userId, int limit) {

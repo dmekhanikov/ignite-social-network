@@ -3,6 +3,7 @@ package dm.social.model;
 import org.apache.ignite.cache.affinity.AffinityKeyMapped;
 import org.apache.ignite.cache.query.annotations.QuerySqlField;
 
+import java.util.Date;
 import java.util.UUID;
 
 public class Post {
@@ -10,7 +11,7 @@ public class Post {
     private UUID postId;
 
     @AffinityKeyMapped
-    @QuerySqlField
+    @QuerySqlField(index = true)
     private String userId;
 
     @QuerySqlField
@@ -40,5 +41,12 @@ public class Post {
 
     public long createdUTCTimestamp() {
         return createdUTCTimestamp;
+    }
+
+    @Override
+    public String toString() {
+        Date date = new Date(createdUTCTimestamp);
+
+        return "[" + date + "] " + userId + ": " + text;
     }
 }

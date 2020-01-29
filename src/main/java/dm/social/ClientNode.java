@@ -73,6 +73,13 @@ public class ClientNode {
                                 System.err.println("User ID is missing.");
                             }
                             break;
+                        case "unsubscribe":
+                            if (tokens.length > 1) {
+                                clientNode.unsubscribe(tokens[1]);
+                            } else {
+                                System.err.println("User ID is missing.");
+                            }
+                            break;
                         case "feed":
                             clientNode.feed();
                             break;
@@ -107,6 +114,11 @@ public class ClientNode {
 
     private void subscribe(String account) {
         subscriptionService.createSubscription(userId, account);
+        System.out.println("OK");
+    }
+
+    private void unsubscribe(String account) {
+        subscriptionService.removeSubscription(userId, account);
         System.out.println("OK");
     }
 }

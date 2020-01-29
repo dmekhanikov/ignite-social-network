@@ -31,6 +31,15 @@ public class SubscriptionService {
         return subscription;
     }
 
+    public void removeSubscription(String subscriber, String account) {
+        Subscription subscription = new Subscription(subscriber, account);
+
+        IgniteCache<Subscription, Boolean> subscriptionsCache =
+                ignite.getOrCreateCache(ConfigurationManager.instance().subscriptionsCacheConfiguration());
+
+        subscriptionsCache.remove(subscription);
+    }
+
     public List<String> getSubscriptions(String subscriberId) {
         return ignite.compute().affinityCall(ConfigurationManager.SUBSCRIPTIONS_CACHE,
                 subscriberId, new FetchSubscriptionsJob(subscriberId));

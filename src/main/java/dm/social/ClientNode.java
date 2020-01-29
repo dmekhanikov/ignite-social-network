@@ -73,6 +73,9 @@ public class ClientNode {
                                 System.err.println("User ID is missing.");
                             }
                             break;
+                        case "feed":
+                            clientNode.feed();
+                            break;
                         default:
                             System.err.println("Unrecognized command: " + cmd);
                     }
@@ -81,6 +84,13 @@ public class ClientNode {
                     e.printStackTrace();
                 }
             }
+        }
+    }
+
+    private void feed() {
+        List<Post> posts = contentService.fetchFeed(userId, POSTS_LIMIT);
+        for (Post post : posts) {
+            System.out.println(post);
         }
     }
 

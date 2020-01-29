@@ -5,7 +5,7 @@ import org.apache.ignite.cache.query.annotations.QuerySqlField;
 
 public class Subscription {
     @AffinityKeyMapped
-    @QuerySqlField
+    @QuerySqlField(index = true)
     private String subscriberId;
 
     @QuerySqlField

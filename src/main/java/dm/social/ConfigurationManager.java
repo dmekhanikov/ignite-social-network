@@ -5,8 +5,7 @@ import dm.social.model.Subscription;
 import org.apache.ignite.cache.QueryEntity;
 import org.apache.ignite.configuration.CacheConfiguration;
 
-import java.util.Collections;
-import java.util.UUID;
+import java.util.*;
 
 public class ConfigurationManager {
     public static final String POSTS_CACHE = "posts";
@@ -38,6 +37,21 @@ public class ConfigurationManager {
         cacheCfg.setBackups(1);
 
         QueryEntity qe = new QueryEntity(Subscription.class, Boolean.class);
+
+        LinkedHashMap<String, String> fields = new LinkedHashMap<>();
+        fields.put("accountId", String.class.getName());
+        fields.put("subscriberId", String.class.getName());
+        fields.put("active", Boolean.class.getName());
+
+        Set<String> keyFields = new HashSet<>();
+        keyFields.add("accountId");
+        keyFields.add("subscriberId");
+
+        qe.setFields(fields);
+        qe.setKeyFields(keyFields);
+        qe.setValueFieldName("active");
+        qe.setTableName("subscriptions");
+
         cacheCfg.setQueryEntities(Collections.singleton(qe));
         cacheCfg.setSqlSchema(SQL_SCHEMA);
 

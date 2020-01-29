@@ -47,6 +47,6 @@ public class Post {
     public String toString() {
         Date date = new Date(createdUTCTimestamp);
 
-        return "[" + date + "] " + userId + ": " + text;
+        return "[" + date + "] @" + userId + ": " + text;
     }
 }

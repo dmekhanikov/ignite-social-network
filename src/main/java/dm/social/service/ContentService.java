@@ -2,6 +2,8 @@ package dm.social.service;
 
 import dm.social.ConfigurationManager;
 import dm.social.model.Post;
+import dm.social.model.PostContent;
+import dm.social.model.PostKey;
 import org.apache.ignite.Ignite;
 import org.apache.ignite.IgniteCache;
 import org.apache.ignite.IgniteException;
@@ -28,9 +30,10 @@ public class ContentService {
     }
 
     public void createPost(String userId, String text) {
-        Post post = new Post(UUID.randomUUID(), userId, text, new Date().getTime());
-        IgniteCache<UUID, Post> postsCache = postsCache(ignite);
-        postsCache.put(post.postId(), post);
+        PostKey key = new PostKey(UUID.randomUUID(), userId);
+        PostContent content = new PostContent(text, new Date().getTime());
+        IgniteCache<PostKey, PostContent> postsCache = postsCache(ignite);
+        postsCache.put(key, content);
     }
 
     public List<Post> fetchPosts(String userId, int limit) {
@@ -48,8 +51,8 @@ public class ContentService {
         }
     }
 
-    private static IgniteCache<UUID, Post> postsCache(Ignite ignite) {
-        CacheConfiguration<UUID, Post> cacheCfg = ConfigurationManager.instance().postsCacheConfiguration();
+    private static IgniteCache<PostKey, PostContent> postsCache(Ignite ignite) {
+        CacheConfiguration<PostKey, PostContent> cacheCfg = ConfigurationManager.instance().postsCacheConfiguration();
         return ignite.getOrCreateCache(cacheCfg);
     }
 
@@ -103,8 +106,7 @@ public class ContentService {
                 posts.addAll(res.getData());
             }
 
-            posts.sort(Comparator.comparing(Post::createdUTCTimestamp));
-            Collections.reverse(posts);
+            posts.sort(Comparator.comparing(post -> -post.content().createdUTCTimestamp()));
             while (posts.size() > limit) {
                 posts.remove(posts.size() - 1);
             }
@@ -152,7 +154,7 @@ public class ContentService {
         }
 
         @Override
-        public List<Post> call() throws Exception {
+        public List<Post> call() {
             SqlFieldsQuery q = new SqlFieldsQuery(
                     "SELECT postId, userId, text, createdUTCTimestamp " +
                             "FROM posts " +
@@ -168,7 +170,10 @@ public class ContentService {
                 String userId = (String) row.get(1);
                 String text = (String) row.get(2);
                 long createdTimestamp = (Long) row.get(3);
-                Post post = new Post(postId, userId, text, createdTimestamp);
+
+                PostKey key = new PostKey(postId, userId);
+                PostContent content = new PostContent(text, createdTimestamp);
+                Post post = new Post(key, content);
 
                 posts.add(post);
             }

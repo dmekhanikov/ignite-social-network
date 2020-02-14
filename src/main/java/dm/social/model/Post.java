@@ -1,52 +1,28 @@
 package dm.social.model;
 
-import org.apache.ignite.cache.affinity.AffinityKeyMapped;
-import org.apache.ignite.cache.query.annotations.QuerySqlField;
-
 import java.util.Date;
-import java.util.UUID;
 
 public class Post {
-    @QuerySqlField
-    private UUID postId;
+    private PostKey key;
+    private PostContent content;
 
-    @AffinityKeyMapped
-    @QuerySqlField(index = true)
-    private String userId;
-
-    @QuerySqlField
-    private String text;
-
-    @QuerySqlField(index = true)
-    private long createdUTCTimestamp;
-
-    public Post(UUID postId, String userId, String text, long createdUTCTimestamp) {
-        this.postId = postId;
-        this.userId = userId;
-        this.text = text;
-        this.createdUTCTimestamp = createdUTCTimestamp;
+    public Post(PostKey key, PostContent content) {
+        this.key = key;
+        this.content = content;
     }
 
-    public UUID postId() {
-        return postId;
+    public PostKey key() {
+        return key;
     }
 
-    public String userId() {
-        return userId;
-    }
-
-    public String text() {
-        return text;
-    }
-
-    public long createdUTCTimestamp() {
-        return createdUTCTimestamp;
+    public PostContent content() {
+        return content;
     }
 
     @Override
     public String toString() {
-        Date date = new Date(createdUTCTimestamp);
+        Date date = new Date(content.createdUTCTimestamp());
 
-        return "[" + date + "] @" + userId + ": " + text;
+        return "[" + date + "] @" + key.userId() + ": " + content.text();
     }
 }

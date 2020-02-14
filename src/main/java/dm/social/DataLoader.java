@@ -2,7 +2,8 @@ package dm.social;
 
 import com.opencsv.CSVReader;
 import com.opencsv.exceptions.CsvException;
-import dm.social.model.Post;
+import dm.social.model.PostContent;
+import dm.social.model.PostKey;
 import org.apache.ignite.Ignite;
 import org.apache.ignite.IgniteDataStreamer;
 import org.apache.ignite.Ignition;
@@ -39,7 +40,7 @@ public class DataLoader {
 
         BufferedReader br = new BufferedReader(new FileReader(sourceFile));
         try (CSVReader csvReader = new CSVReader(br);
-             IgniteDataStreamer<UUID, Post> streamer = ignite.dataStreamer(ConfigurationManager.POSTS_CACHE)) {
+             IgniteDataStreamer<PostKey, PostContent> streamer = ignite.dataStreamer(ConfigurationManager.POSTS_CACHE)) {
             streamer.allowOverwrite(true);
 
             ignite.log().info("Started loading data.");
@@ -51,9 +52,10 @@ public class DataLoader {
                     String userId = row[USER_COL];
                     UUID postId = UUID.randomUUID();
                     String text = row[TEXT_COL];
-                    Post post = new Post(postId, userId, text, createdTimestamp);
+                    PostKey postKey = new PostKey(postId, userId);
+                    PostContent content = new PostContent(text, createdTimestamp);
 
-                    streamer.addData(postId, post);
+                    streamer.addData(postKey, content);
                 } catch (ParseException e) {
                     ignite.log().error("Failed to parse date of a tweet. Skipping. Tweet ID: " + row[ID_COL]);
                 }

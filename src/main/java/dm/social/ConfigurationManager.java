@@ -1,11 +1,16 @@
 package dm.social;
 
-import dm.social.model.Post;
+import dm.social.model.PostContent;
+import dm.social.model.PostKey;
 import dm.social.model.Subscription;
+import org.apache.ignite.cache.CacheKeyConfiguration;
 import org.apache.ignite.cache.QueryEntity;
 import org.apache.ignite.configuration.CacheConfiguration;
 
-import java.util.*;
+import java.util.Collections;
+import java.util.HashSet;
+import java.util.LinkedHashMap;
+import java.util.Set;
 
 public class ConfigurationManager {
     public static final String POSTS_CACHE = "posts";
@@ -19,15 +24,16 @@ public class ConfigurationManager {
         return INSTANCE;
     }
 
-    public CacheConfiguration<UUID, Post> postsCacheConfiguration() {
-        CacheConfiguration<UUID, Post> cacheCfg = new CacheConfiguration<>(POSTS_CACHE);
+    public CacheConfiguration<PostKey, PostContent> postsCacheConfiguration() {
+        CacheConfiguration<PostKey, PostContent> cacheCfg = new CacheConfiguration<>(POSTS_CACHE);
         cacheCfg.setBackups(1);
 
-        QueryEntity qe = new QueryEntity(UUID.class, Post.class);
-        qe.setKeyFieldName("postId");
-        qe.setTableName("posts");
+        QueryEntity qe = new QueryEntity(PostKey.class, PostContent.class);
+        qe.setTableName(POSTS_CACHE);
         cacheCfg.setQueryEntities(Collections.singleton(qe));
         cacheCfg.setSqlSchema(SQL_SCHEMA);
+
+        cacheCfg.setKeyConfiguration(keyConfiguration(PostKey.class, "userId"));
 
         return cacheCfg;
     }
@@ -38,6 +44,8 @@ public class ConfigurationManager {
 
         QueryEntity qe = new QueryEntity(Subscription.class, Boolean.class);
 
+        // Make the cache value one of the columns.
+        // This is required since an SQL table must have at least one column in the value.
         LinkedHashMap<String, String> fields = new LinkedHashMap<>();
         fields.put("accountId", String.class.getName());
         fields.put("subscriberId", String.class.getName());
@@ -50,11 +58,23 @@ public class ConfigurationManager {
         qe.setFields(fields);
         qe.setKeyFields(keyFields);
         qe.setValueFieldName("active");
-        qe.setTableName("subscriptions");
+
+        qe.setTableName(SUBSCRIPTIONS_CACHE);
 
         cacheCfg.setQueryEntities(Collections.singleton(qe));
         cacheCfg.setSqlSchema(SQL_SCHEMA);
 
+        cacheCfg.setKeyConfiguration(keyConfiguration(Subscription.class, "subscriberId"));
+
         return cacheCfg;
+    }
+
+    private CacheKeyConfiguration keyConfiguration(Class<?> keyClass, String affinityFieldName) {
+        // Workaround for https://issues.apache.org/jira/browse/IGNITE-5795
+        CacheKeyConfiguration keyConfig = new CacheKeyConfiguration();
+        keyConfig.setTypeName(keyClass.getName());
+        keyConfig.setAffinityKeyFieldName(affinityFieldName);
+
+        return keyConfig;
     }
 }

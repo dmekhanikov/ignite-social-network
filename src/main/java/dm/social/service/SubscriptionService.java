@@ -54,7 +54,7 @@ public class SubscriptionService {
         }
 
         @Override
-        public List<String> call() throws Exception {
+        public List<String> call() {
             Query<List<?>> q =
                     new SqlFieldsQuery("SELECT accountId FROM subscriptions WHERE subscriberId='" + subscriberId + "'");
 
